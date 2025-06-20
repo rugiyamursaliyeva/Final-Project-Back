@@ -18,4 +18,26 @@ const deleteProduct = async (req, res) => {
     res.json(`${id} -li product silindi`)
 }
 
-export {getProducts, postProduct, deleteProduct}
+const putProduct = async (req, res) => {
+    const { id } = req.params; 
+    const { image, title, description } = req.body; 
+
+    try {
+        const updatedProduct = await ProductModel.findByIdAndUpdate(
+            id,
+            { image, title, description },
+            { new: true } 
+        );
+
+        if (!updatedProduct) {
+            return res.status(404).json({ message: "Product tapilmadi" });
+        }
+
+        res.json(updatedProduct);
+    } catch (error) {
+        res.status(500).json({ message: "Product yenilənərkən xəta baş verdi", error });
+    }
+};
+
+
+export {getProducts, postProduct, deleteProduct, putProduct}
