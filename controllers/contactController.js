@@ -3,7 +3,7 @@ import nodemailer from 'nodemailer'
 const submittedForms = {}
 
 export const sendEmail = async (req, res) => {
-  const { name, surname, email, phoneNumber } = req.body
+  const { name, surname, email, phoneNumber, message } = req.body // ✅ message əlavə olundu
   const key = `${email}-${phoneNumber}`
   const now = Date.now()
 
@@ -35,6 +35,7 @@ export const sendEmail = async (req, res) => {
         <p><b>Soyad:</b> ${surname}</p>
         <p><b>Email:</b> ${email}</p>
         <p><b>Telefon:</b> ${phoneNumber}</p>
+        <p><b>Mesaj:</b><br/> ${message.replace(/\n/g, '<br/>')}</p> <!-- ✅ message göstərildi -->
       `
     }
 
