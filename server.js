@@ -1,35 +1,27 @@
 import express from 'express'
-import { connectDB } from './configs/config.js';
+import { connectDB } from './configs/config.js'
 import ProductRoutes from './routes/productRoutes.js'
+import AdminRoutes from './routes/adminRoutes.js'
+import ContactRoutes from './routes/contactRoutes.js'
 import cors from 'cors'
+import dotenv from 'dotenv'
+
+dotenv.config()
 
 const app = express()
-app.use(express.urlencoded({extended:true}))
+app.use(express.urlencoded({ extended: true }))
 app.use(express.json())
-app.use(cors('*'))
+app.use(cors())
 
-const adminUser = {
-  username: 'admin',
-  password: '1234',
-}
-
-
-app.post('/admin-login', (req, res) => {
-  const { username, password } = req.body
-
-  if (username === adminUser.username && password === adminUser.password) {
-    return res.status(200).json({ success: true, message: 'Admin girişi uğurludur' })
-  } else {
-    return res.status(401).json({ success: false, message: 'Yanlış istifadəçi adı və ya şifrə' })
-  }
-})
-
-
+// Route-lar
 app.use('/', ProductRoutes)
+app.use('/', AdminRoutes)
+app.use('/', ContactRoutes)
 
-
+// Verilənlər bazasına qoşul
 connectDB()
 
-app.listen(5000, () => {
-  console.log('backend running');
+const PORT = process.env.PORT || 5000
+app.listen(PORT, () => {
+  console.log(`✅ Backend running at http://localhost:${PORT}`)
 })
