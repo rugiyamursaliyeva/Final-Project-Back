@@ -3,6 +3,7 @@ import { connectDB } from './configs/config.js'
 import ProductRoutes from './routes/productRoutes.js'
 import AdminRoutes from './routes/adminRoutes.js'
 import ContactRoutes from './routes/contactRoutes.js'
+import ScheduleRoutes from './routes/scheduleRoutes.js' // 🔁 Əlavə et
 import cors from 'cors'
 import dotenv from 'dotenv'
 
@@ -17,6 +18,7 @@ app.use(cors())
 app.use('/', ProductRoutes)
 app.use('/', AdminRoutes)
 app.use('/', ContactRoutes)
+app.use('/', ScheduleRoutes) // ✅ Burada əlavə olundu
 
 // Verilənlər bazasına qoşul
 connectDB()
