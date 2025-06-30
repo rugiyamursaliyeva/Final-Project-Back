@@ -8,6 +8,7 @@ import ProductRoutes from './routes/productRoutes.js';
 import AdminRoutes from './routes/adminRoutes.js';
 import ContactRoutes from './routes/contactRoutes.js';
 import ScheduleRoutes from './routes/scheduleRoutes.js';
+import GroupRoutes from './routes/groupRoutes.js';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import nodemailer from 'nodemailer';
@@ -28,6 +29,7 @@ app.use('/api/auth', AuthRoutes);
 app.use('/api/assignments', AssignmentRoutes);
 app.use('/api/materials', MaterialRoutes);
 app.use('/api/notifications', NotificationRoutes);
+app.use('/api/groups', GroupRoutes);
 
 // Verilənlər bazasına qoşul
 connectDB();

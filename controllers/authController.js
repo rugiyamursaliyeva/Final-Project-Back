@@ -19,9 +19,11 @@ export const register = async (req, res) => {
     }
 
     // E-poçt domeni yoxlaması
-    const allowedDomain = '@code.edu.az';
-    if (!email.endsWith(allowedDomain)) {
-      return res.status(400).json({ message: `E-poçt ${allowedDomain} domeni ilə olmalıdır` });
+    if (role === 'student' && !email.endsWith('@code.edu.az')) {
+      return res.status(400).json({ message: 'Tələbə e-poçtu @code.edu.az domeni ilə olmalıdır' });
+    }
+    if (role === 'teacher' && !email.endsWith('@gmail.com')) {
+      return res.status(400).json({ message: 'Müəllim e-poçtu @gmail.com domeni ilə olmalıdır' });
     }
 
     // Şifrə uyğunluğu
@@ -98,6 +100,8 @@ export const login = async (req, res) => {
         id: user._id,
         email: user.email,
         role: user.role,
+        course: user.course, // Add course to token for assignment filtering
+        groupNo: user.groupNo, // Add groupNo to token for assignment filtering
       },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN }
@@ -112,6 +116,8 @@ export const login = async (req, res) => {
         surname: user.surname,
         email: user.email,
         role: user.role,
+        course: user.course,
+        groupNo: user.groupNo,
       },
     });
   } catch (error) {
