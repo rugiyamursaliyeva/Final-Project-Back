@@ -1,10 +1,18 @@
 import express from 'express';
-import { protect } from '../middleware/authMiddleware.js';
-import { createGroup, getGroups } from '../controllers/groupController.js';
+import {
+  createGroup,
+  getGroups,
+  updateGroup,
+  deleteGroup,
+  getGroupsByCourse
+} from '../controllers/groupController.js';
 
 const router = express.Router();
-router.use(protect);
-router.post('/create', createGroup); // admin
-router.get('/', getGroups); // all users
+
+router.post('/create', createGroup);
+router.get('/', getGroups);
+router.put('/:id', updateGroup);
+router.delete('/:id', deleteGroup);
+router.get('/by-course', getGroupsByCourse);
 
 export default router;

@@ -2,7 +2,7 @@
 import Assignment from '../models/Assignment.js';
 import Notification from '../models/Notification.js';
 import User from '../models/userModel.js';
-import Group from '../models/Group.js';    // <== ƏLAVƏ OLUNDU
+import Group from '../models/group.js';    // <== ƏLAVƏ OLUNDU
 import { transporter } from '../server.js';
 
 

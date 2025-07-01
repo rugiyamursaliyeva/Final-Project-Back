@@ -5,27 +5,9 @@ const userSchema = new mongoose.Schema({
   surname: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  course: {
-    type: String,
-    required: true,
-    enum: [
-      'Front-end',
-      'Back-end',
-      'Graphic Design',
-      'UX/UI Design',
-      'Digital Architecture',
-      '2D Motion Design',
-      'Digital Marketing',
-      'Cybersecurity',
-    ],
-  },
-  groupNo: { type: String, required: true },
-  role: {
-    type: String,
-    enum: ['student', 'teacher'],
-    default: 'student',
-    required: true,
-  },
-}, { timestamps: true });
+  course: { type: String, required: true },
+  groupNo: { type: String, required: false }, // Optional for teachers
+  role: { type: String, enum: ['student', 'teacher'], required: true },
+});
 
 export default mongoose.model('User', userSchema);

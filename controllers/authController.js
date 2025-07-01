@@ -8,8 +8,13 @@ export const register = async (req, res) => {
 
   try {
     // Sahələrin yoxlanılması
-    if (!name || !surname || !email || !password || !confirmPassword || !course || !groupNo || !role || !inviteCode) {
-      return res.status(400).json({ message: 'Bütün sahələr məcburidir' });
+    if (!name || !surname || !email || !password || !confirmPassword || !course || !role || !inviteCode) {
+      return res.status(400).json({ message: 'Bütün zəruri sahələr doldurulmalıdır' });
+    }
+
+    // Tələbə üçün groupNo yoxlaması
+    if (role === 'student' && !groupNo) {
+      return res.status(400).json({ message: 'Tələbələr üçün qrup nömrəsi məcburidir' });
     }
 
     // Təsdiqləmə kodu yoxlaması
@@ -52,7 +57,7 @@ export const register = async (req, res) => {
       email,
       password: hashedPassword,
       course,
-      groupNo,
+      groupNo: role === 'student' ? groupNo : null, // Set groupNo to null for teachers
       role,
     });
 
@@ -100,8 +105,8 @@ export const login = async (req, res) => {
         id: user._id,
         email: user.email,
         role: user.role,
-        course: user.course, // Add course to token for assignment filtering
-        groupNo: user.groupNo, // Add groupNo to token for assignment filtering
+        course: user.course,
+        groupNo: user.groupNo,
       },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN }
