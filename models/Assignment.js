@@ -1,17 +1,18 @@
+// models/Assignment.js
 import mongoose from 'mongoose';
 
 const assignmentSchema = new mongoose.Schema({
   title: { type: String, required: true },
-  description: String,
+  description: { type: String },
   deadline: { type: Date, required: true },
+  githubLink: { type: String },
+  submittedAt: { type: Date },
+  grade: { type: Number },
+  feedback: { type: String },
   course: { type: String, required: true },
   groupNo: { type: String, required: true },
   teacher: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  student: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  githubLink: String,
-  submittedAt: Date,
-  grade: Number,
-  feedback: String,
-}, { timestamps: true });
+  student: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Yeni əlavə edildi
+});
 
 export default mongoose.model('Assignment', assignmentSchema);
