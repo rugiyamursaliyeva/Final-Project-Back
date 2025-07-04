@@ -7,12 +7,12 @@ import { transporter } from '../server.js';
 // Tələbənin tapşırıqlarını gətir
 export const getAssignmentsByStudent = async (req, res) => {
   try {
-    console.log('Fetching assignments for student:', req.user.email); // Debug
-    const assignments = await Assignment.find({ 
-      course: req.user.course, 
-      groupNo: req.user.groupNo 
+    console.log('Fetching assignments for student:', req.user.email);
+    const assignments = await Assignment.find({
+      course: req.user.course,
+      groupNo: req.user.groupNo,
     }).populate('teacher', 'name surname');
-    
+
     res.json(assignments);
   } catch (error) {
     console.error('Tələbə tapşırıqlarını əldə etmə xətası:', error.message, error.stack);
@@ -28,7 +28,7 @@ export const getAssignmentsByTeacher = async (req, res) => {
       return res.status(403).json({ message: 'Yalnız müəllimlər bu əməliyyatı yerinə yetirə bilər' });
     }
 
-    console.log('Fetching assignments for teacher:', req.user.email); // Debug
+    console.log('Fetching assignments for teacher:', req.user.email);
     const assignments = await Assignment.find({ course: req.user.course });
     res.json(assignments);
   } catch (error) {
@@ -46,16 +46,14 @@ export const createAssignment = async (req, res) => {
     }
 
     const { title, description, deadline, course, groupNo } = req.body;
-    console.log('Creating assignment:', { title, course, groupNo, teacherId: req.user.id }); // Debug
+    console.log('Creating assignment:', { title, course, groupNo, teacherId: req.user.id });
 
-    // Mövcud qrupu yoxla
     const groupExists = await Group.findOne({ course, groupNo });
     if (!groupExists) {
       console.error('Group not found:', { course, groupNo });
       return res.status(400).json({ message: 'Bu kursa aid qrup mövcud deyil' });
     }
 
-    // Tapşırığı yarat
     const newAssignment = new Assignment({
       title,
       description,
@@ -67,10 +65,9 @@ export const createAssignment = async (req, res) => {
 
     await newAssignment.save();
 
-    // Tələbələrə bildiriş və email göndər
     const students = await User.find({ role: 'student', course, groupNo });
     for (const student of students) {
-      console.log('Sending notification to student:', student.email); // Debug
+      console.log('Sending notification to student:', student.email);
       await transporter.sendMail({
         from: process.env.EMAIL_USER,
         to: student.email,
@@ -79,8 +76,15 @@ export const createAssignment = async (req, res) => {
       });
 
       const notification = new Notification({
-        user: student._id,
+        recipient: student._id,
+        recipientRole: 'student',
+        course,
         message: `Yeni tapşırıq: ${title}. Son tarix: ${deadline}`,
+        groupNo,
+        sender: req.user._id,
+        senderRole: req.user.role,
+        assignmentTitle: title,
+        isRead: false,
       });
       await notification.save();
     }
@@ -98,18 +102,19 @@ export const submitAssignment = async (req, res) => {
     const { assignmentId } = req.params;
     const { githubLink } = req.body;
 
-    console.log('Submitting assignment:', { assignmentId, githubLink, studentId: req.user.id }); // Debug
+    console.log('Submitting assignment:', { assignmentId, githubLink, studentId: req.user.id });
 
     if (!githubLink) {
       console.error('Missing GitHub link');
       return res.status(400).json({ message: 'GitHub linki tələb olunur' });
     }
 
-    // GitHub link validasiyası
     const githubRegex = /^https?:\/\/(www\.)?github\.com\/[\w-]+\/[\w-]+(\/|\.git)?$/i;
     if (!githubRegex.test(githubLink)) {
       console.error('Invalid GitHub link:', githubLink);
-      return res.status(400).json({ message: 'Etibarsız GitHub link formatı. Link https://github.com ilə başlamalı və istifadəçi adı və repository adı daxil olmalıdır (məsələn, https://github.com/username/repository və ya .git ilə)' });
+      return res.status(400).json({
+        message: 'Etibarsız GitHub link formatı. Link https://github.com ilə başlamalı və istifadəçi adı və repository adı daxil olmalıdır (məsələn, https://github.com/username/repository və ya .git ilə)',
+      });
     }
 
     const assignment = await Assignment.findById(assignmentId);
@@ -118,13 +123,11 @@ export const submitAssignment = async (req, res) => {
       return res.status(404).json({ message: 'Tapşırıq tapılmadı' });
     }
 
-    // Tələbənin tapşırığa icazəsi olub-olmadığını yoxla
     if (req.user.role !== 'student' || req.user.course !== assignment.course || req.user.groupNo !== assignment.groupNo) {
       console.error('Unauthorized submission attempt:', { user: req.user, assignment });
       return res.status(403).json({ message: 'Bu tapşırığı təhvil vermək üçün icazəniz yoxdur' });
     }
 
-    // Son tarix yoxlaması
     if (new Date(assignment.deadline) < new Date()) {
       console.error('Assignment deadline passed:', assignment.deadline);
       return res.status(400).json({ message: 'Tapşırıq üçün son tarix keçib' });
@@ -132,13 +135,12 @@ export const submitAssignment = async (req, res) => {
 
     assignment.githubLink = githubLink;
     assignment.submittedAt = new Date();
-    assignment.student = req.user.id; // Set student ID
+    assignment.student = req.user.id;
     await assignment.save();
 
-    // Müəllimə bildiriş göndər
     const teacher = await User.findById(assignment.teacher);
     if (teacher) {
-      console.log('Sending notification to teacher:', teacher.email); // Debug
+      console.log('Sending notification to teacher:', teacher.email);
       await transporter.sendMail({
         from: process.env.EMAIL_USER,
         to: teacher.email,
@@ -147,10 +149,19 @@ export const submitAssignment = async (req, res) => {
       });
 
       const notification = new Notification({
-        user: teacher._id,
-        message: `${req.user.name} "${assignment.title}" tapşırığını təhvil verdi.`,
+        recipient: teacher._id,
+        recipientRole: 'teacher',
+        course: assignment.course,
+        message: `${req.user.name} "${assignment.title}" tapşırığını təhvil verdi. Link: ${githubLink}`,
+        groupNo: assignment.groupNo,
+        sender: req.user._id,
+        senderRole: req.user.role,
+        assignmentTitle: assignment.title,
+        isRead: false,
       });
       await notification.save();
+    } else {
+      console.warn('Teacher not found for assignment:', assignmentId);
     }
 
     res.json({ message: 'Tapşırıq uğurla göndərildi', assignment });
@@ -171,7 +182,6 @@ export const gradeAssignment = async (req, res) => {
     const { assignmentId } = req.params;
     const { grade, feedback } = req.body;
 
-    // Validate input
     if (!grade || !feedback) {
       console.error('Missing grade or feedback:', { grade, feedback });
       return res.status(400).json({ message: 'Qiymət və rəy tələb olunur' });
@@ -188,7 +198,6 @@ export const gradeAssignment = async (req, res) => {
       return res.status(404).json({ message: 'Tapşırıq tapılmadı' });
     }
 
-    // Allow any teacher of the same course to grade
     if (req.user.course !== assignment.course) {
       console.error('Teacher course mismatch:', {
         teacherCourse: req.user.course,
@@ -197,7 +206,7 @@ export const gradeAssignment = async (req, res) => {
         assignmentTeacher: assignment.teacher.toString(),
       });
       return res.status(403).json({ message: 'Bu tapşırığı qiymətləndirmək üçün icazəniz yoxdur' });
-    }
+  }
 
     console.log('Grading assignment:', {
       assignmentId,
@@ -205,17 +214,16 @@ export const gradeAssignment = async (req, res) => {
       assignmentTeacher: assignment.teacher.toString(),
       grade: gradeValue,
       feedback,
-    }); // Debug
+    });
 
     assignment.grade = gradeValue;
     assignment.feedback = feedback;
     await assignment.save();
 
-    // Tələbəyə email və bildiriş göndər
     const students = await User.find({ role: 'student', course: assignment.course, groupNo: assignment.groupNo });
     const student = students.find(s => s._id.toString() === (assignment.student?.toString() || ''));
     if (student) {
-      console.log('Sending notification to student:', student.email); // Debug
+      console.log('Sending notification to student:', student.email);
       await transporter.sendMail({
         from: process.env.EMAIL_USER,
         to: student.email,
@@ -224,13 +232,19 @@ export const gradeAssignment = async (req, res) => {
       });
 
       const notification = new Notification({
-        user: student._id,
+        recipient: student._id,
+        recipientRole: 'student',
+        course: assignment.course,
         message: `Tapşırıq "${assignment.title}" ${req.user.name} ${req.user.surname} tərəfindən qiymətləndirildi. Qiymət: ${gradeValue}`,
-        teacher: req.user._id, // Müəllim ID-si əlavə olunur
+        groupNo: assignment.groupNo,
+        sender: req.user._id,
+        senderRole: req.user.role,
+        assignmentTitle: assignment.title,
+        isRead: false,
       });
       await notification.save();
     } else {
-      console.warn('No student found for assignment:', assignmentId); // Debug
+      console.warn('No student found for assignment:', assignmentId);
     }
 
     res.json({ message: 'Tapşırıq qiymətləndirildi', assignment });
@@ -257,7 +271,6 @@ export const updateAssignment = async (req, res) => {
       return res.status(404).json({ message: 'Tapşırıq tapılmadı' });
     }
 
-    // Allow any teacher of the same course to update
     if (req.user.course !== assignment.course) {
       console.error('Teacher course mismatch:', {
         teacherCourse: req.user.course,
@@ -268,7 +281,6 @@ export const updateAssignment = async (req, res) => {
       return res.status(403).json({ message: 'Bu tapşırığı redaktə etmək üçün icazəniz yoxdur' });
     }
 
-    // Mövcud qrupu yoxla
     const groupExists = await Group.findOne({ course, groupNo });
     if (!groupExists) {
       console.error('Group not found:', { course, groupNo });
@@ -305,7 +317,6 @@ export const deleteAssignment = async (req, res) => {
       return res.status(404).json({ message: 'Tapşırıq tapılmadı' });
     }
 
-    // Allow any teacher of the same course to delete
     if (req.user.course !== assignment.course) {
       console.error('Teacher course mismatch:', {
         teacherCourse: req.user.course,
