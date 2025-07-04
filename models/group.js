@@ -4,13 +4,13 @@ import mongoose from 'mongoose';
 const groupSchema = new mongoose.Schema({
   groupNo: { 
     type: String, 
-    required: [true, 'Qrup nömrəsi tələb olunur'],
+    required: [true, 'Group number required'],
     trim: true,
-    maxlength: [10, 'Qrup nömrəsi maksimum 10 simvol ola bilər']
+    maxlength: [10, 'The group number can be a maximum of 10 characters.']
   },
   course: {
     type: String,
-    required: [true, 'Kurs tələb olunur'],
+    required: [true, 'Course required'],
     enum: {
       values: [
         'Front-end',
@@ -22,7 +22,7 @@ const groupSchema = new mongoose.Schema({
         'Digital Marketing',
         'Cybersecurity',
       ],
-      message: 'Geçərli bir kurs seçin'
+      message: 'Choose a valid course'
     }
   },
 }, { 

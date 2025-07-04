@@ -7,20 +7,20 @@ export const createGroup = async (req, res) => {
     const { groupNo, course } = req.body;
 
     if (!groupNo || !course) {
-      return res.status(400).json({ success: false, message: 'Qrup nömrəsi və kurs tələb olunur' });
+      return res.status(400).json({ success: false, message: 'Group number and course required' });
     }
 
     const existing = await Group.findOne({ groupNo, course });
     if (existing) {
-      return res.status(400).json({ success: false, message: 'Bu qrup artıq mövcuddur' });
+      return res.status(400).json({ success: false, message: 'This group already exists.' });
     }
 
     const group = new Group({ groupNo, course });
     const savedGroup = await group.save();
 
-    res.status(201).json({ success: true, message: 'Qrup uğurla yaradıldı', group: savedGroup });
+    res.status(201).json({ success: true, message: 'Group created successfully', group: savedGroup });
   } catch (err) {
-    res.status(500).json({ success: false, message: 'Server xətası: ' + err.message });
+    res.status(500).json({ success: false, message: 'Server error: ' + err.message });
   }
 };
 
@@ -30,7 +30,7 @@ export const getGroups = async (req, res) => {
     const groups = await Group.find().sort({ course: 1, groupNo: 1 });
     res.json({ success: true, groups, count: groups.length });
   } catch (err) {
-    res.status(500).json({ success: false, message: 'Qrupları əldə etmək mümkün olmadı' });
+    res.status(500).json({ success: false, message: 'Unable to retrieve groups' });
   }
 };
 
@@ -41,13 +41,13 @@ export const updateGroup = async (req, res) => {
     const { groupNo, course } = req.body;
 
     if (!groupNo || !course) {
-      return res.status(400).json({ success: false, message: 'Qrup nömrəsi və kurs tələb olunur' });
+      return res.status(400).json({ success: false, message: 'Group number and course required' });
     }
 
     // Başqa qrupda eyni ad varsa, xətadır
     const existing = await Group.findOne({ groupNo, course, _id: { $ne: id } });
     if (existing) {
-      return res.status(400).json({ success: false, message: 'Bu qrup artıq mövcuddur' });
+      return res.status(400).json({ success: false, message: 'This group already exists.' });
     }
 
     const updatedGroup = await Group.findByIdAndUpdate(
@@ -57,12 +57,12 @@ export const updateGroup = async (req, res) => {
     );
 
     if (!updatedGroup) {
-      return res.status(404).json({ success: false, message: 'Qrup tapılmadı' });
+      return res.status(404).json({ success: false, message: 'Group not found' });
     }
 
-    res.json({ success: true, message: 'Qrup uğurla yeniləndi', group: updatedGroup });
+    res.json({ success: true, message: 'Group updated successfully.', group: updatedGroup });
   } catch (err) {
-    res.status(500).json({ success: false, message: 'Qrup yeniləmək mümkün olmadı' });
+    res.status(500).json({ success: false, message: 'Unable to update group' });
   }
 };
 
@@ -73,12 +73,12 @@ export const deleteGroup = async (req, res) => {
     const group = await Group.findByIdAndDelete(id);
 
     if (!group) {
-      return res.status(404).json({ success: false, message: 'Qrup tapılmadı' });
+      return res.status(404).json({ success: false, message: 'Group not found' });
     }
 
-    res.json({ success: true, message: 'Qrup uğurla silindi' });
+    res.json({ success: true, message: 'Group successfully deleted.' });
   } catch (err) {
-    res.status(500).json({ success: false, message: 'Qrup silmək mümkün olmadı' });
+    res.status(500).json({ success: false, message: 'Unable to delete group' });
   }
 };
 
@@ -87,13 +87,13 @@ export const getGroupsByCourse = async (req, res) => {
   try {
     const { course } = req.query;
     if (!course) {
-      return res.status(400).json({ success: false, message: 'Kurs tələb olunur' });
+      return res.status(400).json({ success: false, message: 'Course required' });
     }
 
     const groups = await Group.find({ course }).sort({ groupNo: 1 });
 
     res.json({ success: true, groups, count: groups.length });
   } catch (err) {
-    res.status(500).json({ success: false, message: 'Qrupları əldə etmək mümkün olmadı' });
+    res.status(500).json({ success: false, message: 'Unable to retrieve groups' });
   }
 };

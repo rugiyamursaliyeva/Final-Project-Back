@@ -22,7 +22,7 @@ const upload = multer({
     if (file.mimetype === 'application/pdf') {
       cb(null, true);
     } else {
-      cb(new Error('Yalnız PDF faylları qəbul olunur'), false);
+      cb(new Error('Only PDF files are accepted.'), false);
     }
   },
 }).single('file');
@@ -43,7 +43,7 @@ export const getMaterials = async (req, res) => {
     res.json(materials);
   } catch (error) {
     console.error('Get materials error:', error.message);
-    res.status(500).json({ message: 'Xəta baş verdi: ' + error.message });
+    res.status(500).json({ message: 'An error occurred: ' + error.message });
   }
 };
 
@@ -51,13 +51,13 @@ export const getMaterials = async (req, res) => {
 export const createMaterial = async (req, res) => {
   try {
     if (req.user.role !== 'teacher') {
-      return res.status(403).json({ message: 'Yalnız müəllimlər material əlavə edə bilər' });
+      return res.status(403).json({ message: 'Only teachers can add materials' });
     }
 
     upload(req, res, async (err) => {
       if (err) {
         console.error('Upload error:', err.message);
-        return res.status(400).json({ message: err.message || 'Fayl yüklənməsi xətası' });
+        return res.status(400).json({ message: err.message || 'File upload error' });
       }
 
       const { title, type, course, description, groupNo } = req.body;
@@ -70,19 +70,19 @@ export const createMaterial = async (req, res) => {
         const filePath = path.join(process.cwd(), 'uploads', 'materials', req.file.filename);
         if (!fs.existsSync(filePath)) {
           console.error('File not found after upload:', filePath);
-          return res.status(500).json({ message: 'Fayl yükləndi, lakin serverdə tapılmadı' });
+          return res.status(500).json({ message: 'File uploaded but not found on the server' });
         }
       } else if (type === 'video' && req.body.url) {
         const urlPattern = /^https?:\/\/(www\.)?[\w-]+\.[\w-]+(\/[\w-./?%&=]*)?$/;
         if (!urlPattern.test(req.body.url)) {
           console.error('Invalid video URL:', req.body.url);
-          return res.status(400).json({ message: 'Düzgün video URL daxil edin' });
+          return res.status(400).json({ message: 'Please enter a valid video URL.' });
         }
         url = req.body.url;
         console.log('Video URL:', url);
       } else {
         console.error('Missing file or URL for type:', type);
-        return res.status(400).json({ message: 'PDF üçün fayl və ya video üçün URL tələb olunur' });
+        return res.status(400).json({ message: 'A file or URL for a video is required for a PDF.' });
       }
 
       const newMaterial = new Material({
@@ -97,11 +97,11 @@ export const createMaterial = async (req, res) => {
 
       await newMaterial.save();
       console.log('New material saved:', newMaterial);
-      res.status(201).json({ message: 'Material uğurla əlavə olundu', material: newMaterial });
+      res.status(201).json({ message: 'Material added successfully', material: newMaterial });
     });
   } catch (error) {
     console.error('Create material error:', error.message);
-    res.status(500).json({ message: 'Xəta baş verdi: ' + error.message });
+    res.status(500).json({ message: 'An error occurred:' + error.message });
   }
 };
 
@@ -109,13 +109,13 @@ export const createMaterial = async (req, res) => {
 export const updateMaterial = async (req, res) => {
   try {
     if (req.user.role !== 'teacher') {
-      return res.status(403).json({ message: 'Yalnız müəllimlər material redaktə edə bilər' });
+      return res.status(403).json({ message: 'Only teachers can edit material' });
     }
 
     upload(req, res, async (err) => {
       if (err) {
         console.error('Upload error:', err.message);
-        return res.status(400).json({ message: err.message || 'Fayl yüklənməsi xətası' });
+        return res.status(400).json({ message: err.message || 'File upload error' });
       }
 
       const { materialId } = req.params;
@@ -125,11 +125,11 @@ export const updateMaterial = async (req, res) => {
       const material = await Material.findById(materialId);
       if (!material) {
         console.error('Material not found:', materialId);
-        return res.status(404).json({ message: 'Material tapılmadı' });
+        return res.status(404).json({ message: 'Material not found' });
       }
 
       if (material.uploadedBy.toString() !== req.user.id) {
-        return res.status(403).json({ message: 'Bu materialı redaktə etməyə icazəniz yoxdur' });
+        return res.status(403).json({ message: 'You do not have permission to edit this material.' });
       }
 
       if (type === 'pdf' && req.file) {
@@ -146,7 +146,7 @@ export const updateMaterial = async (req, res) => {
         const urlPattern = /^https?:\/\/(www\.)?[\w-]+\.[\w-]+(\/[\w-./?%&=]*)?$/;
         if (!urlPattern.test(req.body.url)) {
           console.error('Invalid video URL:', req.body.url);
-          return res.status(400).json({ message: 'Düzgün video URL daxil edin' });
+          return res.status(400).json({ message: 'Please enter a valid video URL.' });
         }
         updateData.url = req.body.url;
         console.log('Video URL updated:', updateData.url);
@@ -156,11 +156,11 @@ export const updateMaterial = async (req, res) => {
 
       const updatedMaterial = await Material.findByIdAndUpdate(materialId, updateData, { new: true });
       console.log('Material updated:', updatedMaterial);
-      res.json({ message: 'Material uğurla yeniləndi', material: updatedMaterial });
+      res.json({ message: 'Material updated successfully.', material: updatedMaterial });
     });
   } catch (error) {
     console.error('Update material error:', error.message);
-    res.status(500).json({ message: 'Xəta baş verdi: ' + error.message });
+    res.status(500).json({ message: 'An error occurred: ' + error.message });
   }
 };
 
@@ -168,18 +168,18 @@ export const updateMaterial = async (req, res) => {
 export const deleteMaterial = async (req, res) => {
   try {
     if (req.user.role !== 'teacher') {
-      return res.status(403).json({ message: 'Yalnız müəllimlər material silə bilər' });
+      return res.status(403).json({ message: 'Only teachers can delete material' });
     }
 
     const { materialId } = req.params;
     const material = await Material.findById(materialId);
     if (!material) {
       console.error('Material not found:', materialId);
-      return res.status(404).json({ message: 'Material tapılmadı' });
+      return res.status(404).json({ message: 'Material not found' });
     }
 
     if (material.uploadedBy.toString() !== req.user.id) {
-      return res.status(403).json({ message: 'Bu materialı silməyə icazəniz yoxdur' });
+      return res.status(403).json({ message: 'You do not have permission to delete this material.' });
     }
 
     if (material.type === 'pdf' && material.url && material.url.startsWith('/uploads/materials/')) {
@@ -192,9 +192,9 @@ export const deleteMaterial = async (req, res) => {
 
     await Material.findByIdAndDelete(materialId);
     console.log('Material deleted:', materialId);
-    res.json({ message: 'Material uğurla silindi' });
+    res.json({ message: 'Material successfully deleted.' });
   } catch (error) {
     console.error('Delete material error:', error.message);
-    res.status(500).json({ message: 'Xəta baş verdi: ' + error.message });
+    res.status(500).json({ message: 'An error occurred: ' + error.message });
   }
 };

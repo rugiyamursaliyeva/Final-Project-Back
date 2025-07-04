@@ -6,8 +6,8 @@ export const adminLogin = (req, res) => {
 
   const { username, password } = req.body
   if (username === adminUser.username && password === adminUser.password) {
-    return res.status(200).json({ success: true, message: 'Admin girişi uğurludur' })
+    return res.status(200).json({ success: true, message: 'Admin login successful' })
   } else {
-    return res.status(401).json({ success: false, message: 'Yanlış istifadəçi adı və ya şifrə' })
+    return res.status(401).json({ success: false, message: 'Incorrect username or password.' })
   }
 }

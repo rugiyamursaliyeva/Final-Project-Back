@@ -30,12 +30,12 @@ const putProduct = async (req, res) => {
         );
 
         if (!updatedProduct) {
-            return res.status(404).json({ message: "Product tapilmadi" });
+            return res.status(404).json({ message: "Product not found" });
         }
 
         res.json(updatedProduct);
     } catch (error) {
-        res.status(500).json({ message: "Product yenilənərkən xəta baş verdi", error });
+        res.status(500).json({ message: "An error occurred while updating the product.", error });
     }
 };
 

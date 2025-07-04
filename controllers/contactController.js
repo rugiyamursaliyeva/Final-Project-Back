@@ -28,22 +28,22 @@ export const sendEmail = async (req, res) => {
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: process.env.EMAIL_RECEIVER,
-      subject: 'Yeni Form Məlumatı',
+      subject: 'New Form Information',
       html: `
-        <h2>Yeni Müraciət</h2>
-        <p><b>Ad:</b> ${name}</p>
-        <p><b>Soyad:</b> ${surname}</p>
+        <h2>New Application</h2>
+        <p><b>Name:</b> ${name}</p>
+        <p><b>Surname:</b> ${surname}</p>
         <p><b>Email:</b> ${email}</p>
-        <p><b>Telefon:</b> ${phoneNumber}</p>
-        <p><b>Mesaj:</b><br/> ${message.replace(/\n/g, '<br/>')}</p> <!-- ✅ message göstərildi -->
+        <p><b>Phone:</b> ${phoneNumber}</p>
+        <p><b>Message:</b><br/> ${message.replace(/\n/g, '<br/>')}</p> <!-- ✅ message displayed -->
       `
     }
 
     const info = await transporter.sendMail(mailOptions)
-    console.log('Email göndərildi:', info.response)
-    res.status(200).json({ success: true, message: 'Email göndərildi' })
+    console.log('Email sent:', info.response)
+    res.status(200).json({ success: true, message: 'Email senti' })
   } catch (error) {
-    console.error('Email göndərmə xətası:', error.message)
+    console.error('Error sending email:', error.message)
     res.status(500).json({ success: false, message: error.message })
   }
 }

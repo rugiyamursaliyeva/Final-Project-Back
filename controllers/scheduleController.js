@@ -6,7 +6,7 @@ export const createSchedule = async (req, res) => {
 
     const parsedDate = new Date(date)
     if (isNaN(parsedDate)) {
-      return res.status(400).json({ message: "Tarix formatı düzgün deyil" })
+      return res.status(400).json({ message: "The date format is incorrect." })
     }
 
     const newSchedule = new ClassSchedule({
@@ -19,8 +19,8 @@ export const createSchedule = async (req, res) => {
     await newSchedule.save()
     res.status(201).json(newSchedule)
   } catch (error) {
-    console.error("Xəta əlavə edilərkən:", error)
-    res.status(500).json({ message: 'Əlavə edilərkən xəta baş verdi', error: error.message })
+    console.error("When adding an error:", error)
+    res.status(500).json({ message: 'An error occurred while adding.', error: error.message })
   }
 }
 
@@ -29,7 +29,7 @@ export const getSchedule = async (req, res) => {
     const schedule = await ClassSchedule.find()
     res.status(200).json(schedule)
   } catch (error) {
-    res.status(500).json({ message: 'Gətirilərkən xəta baş verdi' })
+    res.status(500).json({ message: 'An error occurred while retrieving.' })
   }
 }
 
@@ -42,15 +42,15 @@ export const updateSchedule = async (req, res) => {
     )
     res.status(200).json(updated)
   } catch (error) {
-    res.status(500).json({ message: 'Yenilənərkən xəta baş verdi' })
+    res.status(500).json({ message: 'An error occurred while updating.' })
   }
 }
 
 export const deleteSchedule = async (req, res) => {
   try {
     await ClassSchedule.findByIdAndDelete(req.params.id)
-    res.status(200).json({ message: 'Uğurla silindi' })
+    res.status(200).json({ message: 'Successfully deleted' })
   } catch (error) {
-    res.status(500).json({ message: 'Silinərkən xəta baş verdi' })
+    res.status(500).json({ message: 'An error occurred while deleting.' })
   }
 }

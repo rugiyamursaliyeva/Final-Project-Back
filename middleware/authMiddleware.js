@@ -4,7 +4,7 @@ export const protect = (req, res, next) => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ message: 'Token tələb olunur' });
+    return res.status(401).json({ message: 'Token required' });
   }
 
   const token = authHeader.split(' ')[1];
@@ -14,6 +14,6 @@ export const protect = (req, res, next) => {
     req.user = decoded;
     next();
   } catch (error) {
-    return res.status(401).json({ message: 'Token etibarsızdır' });
+    return res.status(401).json({ message: 'Token is invalid.' });
   }
 };

@@ -7,7 +7,7 @@ export const createNotification = async (req, res) => {
   try {
     const { message, course, groupNo, assignmentTitle, recipientRole, studentId } = req.body;
     if (!message || !course) {
-      return res.status(400).json({ message: 'Mesaj və kurs tələb olunur' });
+      return res.status(400).json({ message: 'Message and course required' });
     }
     let recipients;
     if (recipientRole === 'student') {
@@ -16,16 +16,16 @@ export const createNotification = async (req, res) => {
       } else if (groupNo) {
         recipients = await User.find({ role: 'student', course, groupNo });
       } else {
-        return res.status(400).json({ message: 'Qrup nömrəsi və ya tələbə ID-si tələb olunur' });
+        return res.status(400).json({ message: 'Group number or student ID required' });
       }
     } else if (recipientRole === 'teacher') {
       recipients = await User.find({ role: 'teacher', course });
     } else {
-      return res.status(400).json({ message: 'Yanlış alıcı rolu' });
+      return res.status(400).json({ message: 'Wrong buyer role' });
     }
     console.log('Found recipients for notification:', recipients);
     if (!recipients || recipients.length === 0) {
-      return res.status(404).json({ message: 'Alıcılar tapılmadı' });
+      return res.status(404).json({ message: 'No buyers found' });
     }
     const notifications = await Promise.all(
       recipients.map(async (recipient) => {
@@ -44,10 +44,10 @@ export const createNotification = async (req, res) => {
         return await notification.save();
       })
     );
-    res.status(201).json({ message: 'Bildirişlər uğurla yaradıldı', notifications });
+    res.status(201).json({ message: 'Notifications created successfully', notifications });
   } catch (error) {
-    console.error('Bildiriş yaratma xətası:', error.message, error.stack);
-    res.status(500).json({ message: 'Xəta baş verdi: ' + error.message });
+    console.error('Error creating notification:', error.message, error.stack);
+    res.status(500).json({ message: 'An error occurred: ' + error.message });
   }
 };
 
@@ -72,8 +72,8 @@ export const getNotifications = async (req, res) => {
     console.log('Fetched notifications:', notifications);
     res.json(notifications);
   } catch (error) {
-    console.error('Bildirişləri əldə etmə xətası:', error.message, error.stack);
-    res.status(500).json({ message: 'Xəta baş verdi: ' + error.message });
+    console.error('Error retrieving notifications:', error.message, error.stack);
+    res.status(500).json({ message: 'An error occurred: ' + error.message });
   }
 };
 
@@ -85,13 +85,13 @@ export const markNotificationAsRead = async (req, res) => {
       recipient: req.user._id,
     });
     if (!notification) {
-      return res.status(404).json({ message: 'Bildiriş tapılmadı və ya icazə yoxdur' });
+      return res.status(404).json({ message: 'Notification not found or not authorized' });
     }
     notification.isRead = true;
     await notification.save();
-    res.json({ message: 'Bildiriş oxundu kimi işarələndi', notification });
+    res.json({ message: 'Notification marked as read', notification });
   } catch (error) {
-    console.error('Bildiriş oxundu işarələmə xətası:', error.message, error.stack);
-    res.status(500).json({ message: 'Xəta baş verdi: ' + error.message });
+    console.error('Error marking notification as read:', error.message, error.stack);
+    res.status(500).json({ message: 'An error occurred: ' + error.message });
   }
 };
